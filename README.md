@@ -113,10 +113,10 @@ data_root
   |   - ***
   | 
   - annotations
-  | - train
+  | - train---------------------------------------> 36 train set
   | | - <SEQ_NAME>.txt
   | | - ***.txt
-  | - test
+  | - test----------------------------------------> 4 test set 
   |   - <SEQ_NAME>.txt
   |   - ***.txt
   - calib
