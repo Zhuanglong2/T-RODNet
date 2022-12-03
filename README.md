@@ -10,6 +10,26 @@ Please cite our paper if this repository is helpful for your research:
 Statement: This code is based on RODNet.[[Arxiv]](https://arxiv.org/abs/2102.05150)
 
 ## Results
+On the CRUW dataset  
+Models | AP | AR 
+:-----:|:----------:|:---------:|
+RODNet-CDC | 76.33 | 79.28 | 
+RODNet-HG | 79.43 | 83.59 | 
+RODNet-HWGI | 78.06 | 81.07 |
+DCSN  | 75.30 | 79.92 |
+T-RODNet |  83.27 | 86.98 |  
+
+On the CARRADA dataset  
+Models | mIoU | mDice 
+:-----:|:----------:|:---------:|
+FCN-8s | 34.5 | 40.9 | 
+U-Net | 32.8 |38.2 | 
+DeepLabv3+ | 32.7 | 38.3 |
+RSS-Net  | 32.1 | 37.8 |
+RAMP-CNN  | 27.9 | 30.5 |
+MV-Net  | 26.8 | 28.5 |
+TMVA-Net  | 41.3 | 51.0 |
+T-RODNet |  43.5 | 53.6 |  
 
 ## Installation
 
