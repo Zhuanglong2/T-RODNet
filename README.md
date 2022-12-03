@@ -3,7 +3,11 @@
 
 T-RODNet has been accepted by IEEE Transactions on Instrumentation and Measurement (TIM).  
 
+<div align=center>
+
 ![T-RODNet Overview](./assets/images/overview.jpg?raw=true)  
+
+</div>
 
 Please cite our paper if this repository is helpful for your research:  
 
@@ -15,7 +19,11 @@ Statement: This code is based on RODNet.[[Arxiv]](https://arxiv.org/abs/2102.051
 [CARRADA](https://arthurouaknine.github.io/codeanddata/carrada)
 
 ## Results
+
 On the CRUW dataset  
+
+<div align=center>
+
 Models | AP | AR 
 :-----:|:----------:|:---------:|
 RODNet-CDC | 76.33 | 79.28 | 
@@ -24,7 +32,11 @@ RODNet-HWGI | 78.06 | 81.07 |
 DCSN  | 75.30 | 79.92 |
 T-RODNet |  83.27 | 86.98 |  
 
+</div>
+
 On the CARRADA dataset  
+<div align=center>
+
 Models | mIoU | mDice 
 :-----:|:----------:|:---------:|
 FCN-8s | 34.5 | 40.9 | 
@@ -35,6 +47,8 @@ RAMP-CNN  | 27.9 | 30.5 |
 MV-Net  | 26.8 | 28.5 |
 TMVA-Net  | 41.3 | 51.0 |
 T-RODNet |  43.5 | 53.6 |  
+
+</div>
 
 ## Installation
 
