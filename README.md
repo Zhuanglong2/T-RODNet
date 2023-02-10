@@ -153,3 +153,19 @@ In this section, we have created new evaluation tools to facilitate testing. The
 ```commandline
 python evaluate/ex_evaluate_rod2021.py
 ```
+
+## Citation
+
+If you find this article very helpful in your research, or if you wish to have a reference when using our results, please cite the following papers:
+
+```
+@ARTICLE{9989400,
+  author={Jiang, Tiezhen and Zhuang, Long and An, Qi and Wang, Jianhua and Xiao, Kai and Wang, Anqi},
+  journal={IEEE Transactions on Instrumentation and Measurement}, 
+  title={T-RODNet: Transformer for Vehicular Millimeter-Wave Radar Object Detection}, 
+  year={2023},
+  volume={72},
+  number={},
+  pages={1-12},
+  doi={10.1109/TIM.2022.3229703}}
+```
