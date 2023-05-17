@@ -139,7 +139,7 @@ def post_process_single_frame(confmaps, dataset, config_dict):
     if class_size != n_class:
         raise TypeError("Wrong class number setting. ")
 
-    res_final = - np.ones((max_dets, 4))
+    res_final = - np.ones((max_dets, 7))
 
     detect_mat = []
     for c in range(class_size):
@@ -166,7 +166,7 @@ def post_process_single_frame(confmaps, dataset, config_dict):
         detect_mat.append(detect_mat_in_class)
 
     detect_mat = np.array(detect_mat)
-    detect_mat = np.reshape(detect_mat, (class_size * max_dets, 4))
+    detect_mat = np.reshape(detect_mat, (class_size * max_dets, 7))
     detect_mat = detect_mat[detect_mat[:, 3].argsort(kind='mergesort')[::-1]]
     res_final[:, :] = detect_mat[:max_dets]
 
