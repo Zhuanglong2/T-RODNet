@@ -334,7 +334,7 @@ if __name__ == "__main__":
             'iter_count': iter_count,
         }
         save_model_path = '%s/epoch_%02d_final.pth' % (model_dir, epoch + 1)
-        torch.save(status_dict, save_model_path)
+        torch.save(net.state_dict(), save_model_path)
 
         scheduler.step()
 
