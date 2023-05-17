@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--config', default=r"E:\PycharmProjects\T-RODNet-main\configs\config_T_Rodnet_win16.py",type=str, help='choose rodnet model configurations')
     parser.add_argument('--sensor_config', type=str, default='sensor_config_rod2021')
     parser.add_argument('--data_dir', type=str, default=r'E:\PycharmProjects\T-RODNet-main\tools\prepare_dataset\data', help='directory to the prepared data')
-    parser.add_argument('--checkpoint', type=str,default=r'E:\PycharmProjects\CRUW_AHU\tools\checkpoints\第一篇\T-RODNet\T-RODNet2.pth', help='path to the saved trained model')
+    parser.add_argument('--checkpoint', type=str,default=r'E:\PycharmProjects\CRUW_AHU\tools\checkpoints\T-RODNet\T-RODNet.pth', help='path to the saved trained model')
     parser.add_argument('--res_dir', type=str, default='./results/', help='directory to save testing results')
     parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
     parser.add_argument('--demo', action="store_true", help='False: test with GT, True: demo without GT')
@@ -259,13 +259,13 @@ if __name__ == "__main__":
                     img_path = image_paths[i]
                     radar_input = chirp_amp(data.numpy()[0, :, i, :, :], radar_configs['data_type'])
                     fig_name = os.path.join(test_res_dir, seq_name, 'rod_viz', '%010d.jpg' % (cur_frame_id))
-                    # if confmap_gt is not None:
-                    #     confmap_gt_0 = confmap_gt[0, :, i, :, :]
-                    #     visualize_test_img(fig_name, img_path, radar_input, confmap_pred_0, confmap_gt_0, res_final_0,
-                    #                        dataset, sybl=sybl)
-                    # else:
-                    #     visualize_test_img_wo_gt(fig_name, img_path, radar_input, confmap_pred_0, res_final_0,
-                    #                              dataset, sybl=sybl)
+                    if confmap_gt is not None:
+                        confmap_gt_0 = confmap_gt[0, :, i, :, :]
+                        visualize_test_img(fig_name, img_path, radar_input, confmap_pred_0, confmap_gt_0, res_final_0,
+                                           dataset, sybl=sybl)
+                    else:
+                        visualize_test_img_wo_gt(fig_name, img_path, radar_input, confmap_pred_0, res_final_0,
+                                                 dataset, sybl=sybl)
                 init_genConfmap = init_genConfmap.next
 
             if iter == len(dataloader) - 1:
