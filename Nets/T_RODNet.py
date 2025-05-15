@@ -157,7 +157,7 @@ class WindowAttention3D(nn.Module):
         coords_d = torch.arange(self.window_size[0])
         coords_h = torch.arange(self.window_size[1])
         coords_w = torch.arange(self.window_size[2])
-        coords = torch.stack(torch.meshgrid(coords_d, coords_h, coords_w))  # 3, Wd, Wh, Ww
+        coords = torch.stack(torch.meshgrid(coords_d, coords_h, coords_w, indexing='xy'))  # 3, Wd, Wh, Ww
         coords_flatten = torch.flatten(coords, 1)  # 3, Wd*Wh*Ww
         relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :]  # 3, Wd*Wh*Ww, Wd*Wh*Ww
         relative_coords = relative_coords.permute(1, 2, 0).contiguous()  # Wd*Wh*Ww, Wd*Wh*Ww, 3
@@ -550,35 +550,6 @@ class PatchExpand(nn.Module):
         return x
 
 
-class FinalPatchExpand_X4(nn.Module):
-    def __init__(self, input_resolution, dim, dim_scale=4, norm_layer=nn.LayerNorm):
-        super().__init__()
-        self.input_resolution = input_resolution
-        self.dim = dim
-        self.dim_scale = dim_scale
-        self.expand = nn.Linear(dim,  4 * 16 * dim, bias=False)
-        # self.expand = nn.Linear(dim,  16 * dim, bias=False)
-        self.output_dim = dim
-        self.norm = norm_layer(self.output_dim)
-
-    def forward(self, x):
-        """
-        x: B, H*W, C
-        """
-        D, H, W = self.input_resolution
-        x = x.permute(0, 4, 1, 2, 3)
-        x = x.flatten(2).transpose(1, 2)
-        x = self.expand(x)
-        B, L, C = x.shape
-
-        x = x.view(B, D, H, W, C)
-        x = rearrange(x, 'b d h w (p1 p2 p3 c)-> b (d p1) (h p2) (w p3) c', p1=self.dim_scale, p2=self.dim_scale, p3=self.dim_scale, c=C // (4 * 4 * 4))
-        # x = x.view(B, -1, self.output_dim)
-        x = self.norm(x)
-
-        return x
-
-
 class BasicLayer_up(nn.Module):
     """ A basic Swin Transformer layer for one stage.
 
@@ -646,7 +617,6 @@ class BasicLayer_up(nn.Module):
         self.conv2 = nn.Conv3d(in_channels=int(dim / 4), out_channels=dim, kernel_size=1)
         self.bn2 = nn.BatchNorm3d(dim)
 
-
         self.relu = nn.ReLU()
         self.LDW = Largedw(dim)
     def forward(self, x, prev_v1, prev_k1, prev_q1, prev_v2, prev_k2, prev_q2):
@@ -664,7 +634,6 @@ class BasicLayer_up(nn.Module):
                 x, _, _, _ = blk(x, attn_mask, prev_v1, prev_k1, prev_q1, True)
             else:
                 x, _, _, _ = blk(x, attn_mask, prev_v2, prev_k2, prev_q2, True)
-
 
         x = x.permute(0, 4, 1, 2, 3)
         if self.upsample is not None:
@@ -771,23 +740,6 @@ class Largedw(nn.Module):
         return x
 
 class BasicLayer(nn.Module):
-    """ A basic Swin Transformer layer for one stage.
-
-    Args:
-        dim (int): Number of feature channels
-        depth (int): Depths of this stage.
-        num_heads (int): Number of attention head.
-        window_size (tuple[int]): Local window size. Default: (1,7,7).
-        mlp_ratio (float): Ratio of mlp hidden dim to embedding dim. Default: 4.
-        qkv_bias (bool, optional): If True, add a learnable bias to query, key, value. Default: True
-        qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set.
-        drop (float, optional): Dropout rate. Default: 0.0
-        attn_drop (float, optional): Attention dropout rate. Default: 0.0
-        drop_path (float | tuple[float], optional): Stochastic depth rate. Default: 0.0
-        norm_layer (nn.Module, optional): Normalization layer. Default: nn.LayerNorm
-        downsample (nn.Module | None, optional): Downsample layer at the end of the layer. Default: None
-    """
-
     def __init__(self,
                  input_resolution,
                  dim,
@@ -843,7 +795,6 @@ class BasicLayer(nn.Module):
         self.bn2 = nn.BatchNorm3d(dim)
 
         self.relu = nn.ReLU()
-        self.LDW = Largedw(dim)
         self.DAM  = DAMLayerConcat(dim)
         self.norm = nn.LayerNorm(dim)
     def forward(self, x, block_num):
@@ -909,62 +860,22 @@ class PatchEmbed3D(nn.Module):
         self.embed_dim = embed_dim
         patches_resolution = [img_size[0] // patch_size[0], img_size[1] // patch_size[1], img_size[1] // patch_size[1]]
         self.patches_resolution = patches_resolution
-        self.proj = nn.Conv3d(in_chans, embed_dim, kernel_size=1)
-        if norm_layer is not None:
-            self.norm = norm_layer(embed_dim)
-        else:
-            self.norm = None
-
-        self.conv1 = nn.Conv3d(in_channels=in_chans , out_channels=embed_dim, kernel_size=(1, 3, 3), stride=(1, 1, 1), padding=(0, 1, 1))
-        self.conv2 = nn.Conv3d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1))
-        self.conv3 = nn.Conv3d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=(1, 1, 1))
-
-
-        self.bn1 = nn.BatchNorm3d(num_features=embed_dim)
-        self.bn2 = nn.BatchNorm3d(num_features=embed_dim)
-        self.bn3 = nn.BatchNorm3d(num_features=embed_dim)
 
         self.relu = nn.ReLU()
-
-        self.conv1a = nn.Conv3d(in_channels=in_chans, out_channels=embed_dim,kernel_size=(9, 5, 5), stride=(1, 1, 1), padding=(4, 2, 2))
-        self.conv1b = nn.Conv3d(in_channels=embed_dim, out_channels=embed_dim,kernel_size=(9, 5, 5), stride=(2, 2, 2), padding=(4, 2, 2))
-
         self.gn1a = nn.GroupNorm(num_groups=int(embed_dim/4), num_channels=embed_dim)
         self.gn1b = nn.GroupNorm(num_groups=int(embed_dim/4), num_channels=embed_dim)
 
+        self.conv1a = nn.Conv3d(in_channels=in_chans, out_channels=embed_dim, kernel_size=(9, 5, 5), stride=(1, 1, 1), padding=(4, 2, 2))
+        self.conv1b = nn.Conv3d(in_channels=64, out_channels=64, kernel_size=(9, 5, 5), stride=(2, 2, 2), padding=(4, 2, 2))
+
     def forward(self, x):
 
-        x = self.relu(self.gn1a(self.conv1a(x)))
-        x = self.relu(self.gn1b(self.conv1b(x)))
+        x = self.relu(self.gn1a(self.conv1a(x)))  # (B, 2, W, 128, 128) -> (B, 64, W, 128, 128)
+        x = self.relu(self.gn1b(self.conv1b(x)))  # (B, 64, W, 128, 128) -> (B, 64, W/2, 64, 64)
 
         return x
 
 class SwinTransformerSys3D(nn.Module):
-    r""" Swin Transformer
-        A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -
-          https://arxiv.org/pdf/2103.14030
-
-    Args:
-        img_size (int | tuple(int)): Input image size. Default 224
-        patch_size (int | tuple(int)): Patch size. Default: 4
-        in_chans (int): Number of input image channels. Default: 3
-        num_classes (int): Number of classes for classification head. Default: 1000
-        embed_dim (int): Patch embedding dimension. Default: 96
-        depths (tuple(int)): Depth of each Swin Transformer layer.
-        num_heads (tuple(int)): Number of attention heads in different layers.
-        window_size (tuple(int)): Window size. Default: (7,7,7)
-        mlp_ratio (float): Ratio of mlp hidden dim to embedding dim. Default: 4
-        qkv_bias (bool): If True, add a learnable bias to query, key, value. Default: True
-        qk_scale (float): Override default qk scale of head_dim ** -0.5 if set. Default: None
-        drop_rate (float): Dropout rate. Default: 0
-        attn_drop_rate (float): Attention dropout rate. Default: 0
-        drop_path_rate (float): Stochastic depth rate. Default: 0.1
-        norm_layer (nn.Module): Normalization layer. Default: nn.LayerNorm.
-        ape (bool): If True, add absolute position embedding to the patch embedding. Default: False
-        patch_norm (bool): If True, add normalization after patch embedding. Default: True
-        use_checkpoint (bool): Whether to use checkpointing to save memory. Default: False
-    """
-
     def __init__(self, pretrained=None,
                  pretrained2d=True,
                  img_size=(128, 128, 128),
@@ -990,8 +901,7 @@ class SwinTransformerSys3D(nn.Module):
                  final_upsample="expand_first", **kwargs):
         super().__init__()
 
-        print(
-            "SwinTransformerSys3D expand initial----depths:{};depths_decoder:{};drop_path_rate:{};num_classes:{};embed_dims:{};window:{}".format(
+        print("SwinTransformerSys3D expand initial----depths:{};depths_decoder:{};drop_path_rate:{};num_classes:{};embed_dims:{};window:{}".format(
                 depths,
                 depths_decoder, drop_path_rate, num_classes, embed_dim, window_size))
 
@@ -1048,10 +958,9 @@ class SwinTransformerSys3D(nn.Module):
         self.layers_up = nn.ModuleList()
         self.concat_back_dim = nn.ModuleList()
         for i_layer in range(self.num_layers):
-            concat_linear = nn.Linear(2 * int(embed_dim * 2 ** (self.num_layers - 1 - i_layer)),
-                                      int(embed_dim * 2 ** (
-                                              self.num_layers - 1 - i_layer)),
-                                      bias=False) if i_layer > 0 else nn.Identity()
+            # concat_linear = nn.Linear(2 * int(embed_dim * 2 ** (self.num_layers - 1 - i_layer)), int(embed_dim * 2 ** (self.num_layers - 1 - i_layer)),bias=False) if i_layer > 0 else nn.Identity()
+
+            concat_linear = nn.Conv3d(in_channels=2 * int(embed_dim * 2 ** (self.num_layers - 1 - i_layer)), out_channels=int(embed_dim * 2 ** (self.num_layers - 1 - i_layer)), kernel_size=(1, 1, 1))
             if i_layer == 0:
                 layer_up = PatchExpand(
                     input_resolution=(patches_resolution[0] // (2 ** (self.num_layers - 1 - i_layer)),
@@ -1081,44 +990,13 @@ class SwinTransformerSys3D(nn.Module):
             self.layers_up.append(layer_up)
             self.concat_back_dim.append(concat_linear)
 
-        self.norm = norm_layer(self.num_features)
-        self.norm_up = norm_layer(self.embed_dim)
-
-
-        if self.final_upsample == "expand_first":
-            print("---final upsample expand_first---")
-            self.up = FinalPatchExpand_X4(input_resolution=(
-                img_size[0] // patch_size[0], img_size[1] // patch_size[1], img_size[2] // patch_size[2]),
-                dim_scale=4, dim=embed_dim)
-            self.output = nn.Conv3d(in_channels=embed_dim, out_channels=self.num_classes, kernel_size=1, bias=False)
-
-        self._freeze_stages()
-
-        self.convlast2 = nn.Conv3d(in_channels=embed_dim, out_channels=self.num_classes, kernel_size=(1, 1, 1))
-        self.linear = nn.Linear(64, 3)
-        self.sigmod = nn.Sigmoid()
-
-        if self.ape:
-            pretrain_img_size = to_3tuple((16, 128, 128))
-            patch_size = to_3tuple((2, 2, 2))
-            patches_resolution = [pretrain_img_size[0] // patch_size[0], pretrain_img_size[1] // patch_size[1],
-                                  pretrain_img_size[2] // patch_size[2]]
-
-            self.absolute_pos_embed = nn.Parameter(torch.zeros(1, embed_dim, patches_resolution[0], patches_resolution[1], patches_resolution[2]))
-            trunc_normal_(self.absolute_pos_embed, std=.02)
-    @torch.jit.ignore
-    def no_weight_decay(self):
-        return {'absolute_pos_embed'}
-
-    @torch.jit.ignore
-    def no_weight_decay_keywords(self):
-        return {'relative_position_bias_table'}
+        self.convlast = nn.Conv3d(in_channels=embed_dim, out_channels=self.num_classes, kernel_size=(1, 1, 1))
 
     # Encoder and Bottleneck
     def forward_features(self, x):
         x = self.patch_embed(x)
 
-        x = self.pos_drop(x)
+        # x = self.pos_drop(x)
         x_downsample = []
         v_values_1 = []
         k_values_1 = []
@@ -1147,133 +1025,16 @@ class SwinTransformerSys3D(nn.Module):
                 x = layer_up(x)
             else:
                 x = torch.cat([x, x_downsample[2 - inx]], 1)
-                B, C, D, H, W = x.shape
-                x = x.flatten(2).transpose(1, 2)
                 x = self.concat_back_dim[inx](x)
-                _, _, C = x.shape
-                x = x.view(B, D, H, W, C)
-
-                x = x.permute(0, 4, 1, 2, 3)
-                x = layer_up(x, v_values_1[2 - inx], k_values_1[2 - inx], q_values_1[2 - inx], v_values_2[2 - inx],
-                             k_values_2[2 - inx], q_values_2[2 - inx])
+                x = layer_up(x, v_values_1[2 - inx], k_values_1[2 - inx], q_values_1[2 - inx], v_values_2[2 - inx], k_values_2[2 - inx], q_values_2[2 - inx])
 
         return x
-
-    def up_x4(self, x):
-
-        x = x.permute(0, 2, 3, 4, 1)
-        x = self.linear(x)
-        x = x.permute(0, 4, 1, 2, 3)
-
-        return x
-
-    def _freeze_stages(self):
-        if self.frozen_stages >= 0:
-            self.patch_embed.eval()
-            for param in self.patch_embed.parameters():
-                param.requires_grad = False
-
-        if self.frozen_stages >= 1:
-            self.pos_drop.eval()
-            for i in range(0, self.frozen_stages):
-                m = self.layers[i]
-                m.eval()
-                for param in m.parameters():
-                    param.requires_grad = False
-
-    def inflate_weights(self):
-        """Inflate the swin2d parameters to swin3d.
-
-        The differences between swin3d and swin2d mainly lie in an extra
-        axis. To utilize the pretrained parameters in 2d model,
-        the weight of swin2d models should be inflated to fit in the shapes of
-        the 3d counterpart.
-
-        Args:
-            logger (logging.Logger): The logger used to print
-                debugging infomation.
-        """
-        checkpoint = torch.load(self.pretrained, map_location='cpu')
-        state_dict = checkpoint['model']
-
-        # delete relative_position_index since we always re-init it
-        relative_position_index_keys = [k for k in state_dict.keys() if "relative_position_index" in k]
-        for k in relative_position_index_keys:
-            del state_dict[k]
-
-        # delete attn_mask since we always re-init it
-        attn_mask_keys = [k for k in state_dict.keys() if "attn_mask" in k]
-        for k in attn_mask_keys:
-            del state_dict[k]
-
-        state_dict['patch_embed.proj.weight'] = state_dict['patch_embed.proj.weight'].unsqueeze(2).repeat(1, 1,
-                                                                                                          self.patch_size[
-                                                                                                              0], 1,
-                                                                                                          1) / \
-                                                self.patch_size[0]
-
-        # bicubic interpolate relative_position_bias_table if not match
-        relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]
-        for k in relative_position_bias_table_keys:
-            relative_position_bias_table_pretrained = state_dict[k]
-            relative_position_bias_table_current = self.state_dict()[k]
-            L1, nH1 = relative_position_bias_table_pretrained.size()
-            L2, nH2 = relative_position_bias_table_current.size()
-            L2 = (2 * self.window_size[1] - 1) * (2 * self.window_size[2] - 1)
-            wd = self.window_size[0]
-            if nH1 != nH2:
-                print(f"Error in loading {k}, passing")
-            else:
-                if L1 != L2:
-                    S1 = int(L1 ** 0.5)
-                    relative_position_bias_table_pretrained_resized = torch.nn.functional.interpolate(
-                        relative_position_bias_table_pretrained.permute(1, 0).view(1, nH1, S1, S1),
-                        size=(2 * self.window_size[1] - 1, 2 * self.window_size[2] - 1),
-                        mode='bicubic')
-                    relative_position_bias_table_pretrained = relative_position_bias_table_pretrained_resized.view(nH2,
-                                                                                                                   L2).permute(
-                        1, 0)
-            state_dict[k] = relative_position_bias_table_pretrained.repeat(2 * wd - 1, 1)
-
-        msg = self.load_state_dict(state_dict, strict=False)
-        print(msg)
-        print(f"=> loaded successfully '{self.pretrained}'")
-        del checkpoint
-        torch.cuda.empty_cache()
-
-    def init_weights(self, pretrained=None):
-        """Initialize the weights in backbone.
-
-        Args:
-            pretrained (str, optional): Path to pre-trained weights.
-                Defaults to None.
-        """
-
-        def _init_weights(m):
-            if isinstance(m, nn.Linear):
-                trunc_normal_(m.weight, std=.02)
-                if isinstance(m, nn.Linear) and m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.LayerNorm):
-                nn.init.constant_(m.bias, 0)
-                nn.init.constant_(m.weight, 1.0)
-
-        if pretrained:
-            self.pretrained = pretrained
-        if isinstance(self.pretrained, str):
-            self.apply(_init_weights)
-
-            print(f'load model from: {self.pretrained}')
-
-        elif self.pretrained is None:
-            self.apply(_init_weights)
-        else:
-            raise TypeError('pretrained must be a str or None')
 
     def forward(self, x):
+
         x, x_downsample, v_values_1, k_values_1, q_values_1, v_values_2, k_values_2, q_values_2 = self.forward_features(x)
         x = self.forward_up_features(x, x_downsample, v_values_1, k_values_1, q_values_1, v_values_2, k_values_2,q_values_2)
-        x = self.up_x4(x)
+        x = self.convlast(x)
 
         return x
 
@@ -1331,41 +1092,6 @@ class T_RODNet(nn.Module):
         else:
             return logits
 
-    def load_from(self, config):
-        pretrained_path = config.MODEL.PRETRAIN_CKPT
-        if pretrained_path is not None:
-            print("pretrained_path:{}".format(pretrained_path))
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            pretrained_dict = torch.load(pretrained_path, map_location=device)
-            if "model" not in pretrained_dict:
-                print("---start load pretrained modle by splitting---")
-                pretrained_dict = {k[17:]: v for k, v in pretrained_dict.items()}
-                for k in list(pretrained_dict.keys()):
-                    if "output" in k:
-                        print("delete key:{}".format(k))
-                        del pretrained_dict[k]
-                self.swin_unet.load_state_dict(pretrained_dict, strict=False)
-
-                return
-            pretrained_dict = pretrained_dict['model']
-            print("---start load pretrained modle of swin encoder---")
-
-            model_dict = self.swin_unet.state_dict()
-            full_dict = copy.deepcopy(pretrained_dict)
-            for k, v in pretrained_dict.items():
-                if "layers." in k:
-                    current_layer_num = 3 - int(k[7:8])
-                    current_k = "layers_up." + str(current_layer_num) + k[8:]
-                    full_dict.update({current_k: v})
-            for k in list(full_dict.keys()):
-                if k in model_dict:
-                    if full_dict[k].shape != model_dict[k].shape:
-                        print("delete:{};shape pretrain:{};shape model:{}".format(k, v.shape, model_dict[k].shape))
-                        del full_dict[k]
-
-            self.swin_unet.load_state_dict(full_dict, strict=False)
-        else:
-            print("none pretrain")
 
 from fvcore.nn import FlopCountAnalysis, parameter_count_table
 if __name__ == '__main__':
