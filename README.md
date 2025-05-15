@@ -13,6 +13,9 @@ Please cite our paper if this repository is helpful for your research:
 
 Statement: This code is based on RODNet.[[Arxiv]](https://arxiv.org/abs/2102.05150)
 
+## Note
+We have resolved the issue where T-RODNet training fails on some graphics cards. Please download our latest project for training.
+
 ## Datasets
 [CRUW](https://www.cruwdataset.org/)
 
