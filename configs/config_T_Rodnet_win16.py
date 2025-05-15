@@ -57,7 +57,7 @@ confmap_cfg = dict(
 )
 
 train_cfg = dict(
-    n_epoch=60,
+    n_epoch=100,
     batch_size=4,
     lr=0.0001,
     lr_step=5,
