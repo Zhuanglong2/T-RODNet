@@ -127,18 +127,7 @@ if __name__ == "__main__":
         NUM_CLASSES = 3
         inputs_size = [128, 128, 2]
         net = T_RODNet(num_classes=NUM_CLASSES, embed_dim=64,win_size=4)
-        # net = RODNet(in_channels=2, n_class=n_class_train).cuda()
-        # net = Swin_RODNet(num_classes=NUM_CLASSES, embed_dim=64, win_size=4)
 
-        checkpoint_path = r''
-        if checkpoint_path != '':
-            print('Load weights......')
-            model_dict = net.state_dict()
-            pretrained_dict = torch.load(checkpoint_path, map_location='cpu')
-            pretrained_dict = {k: v for k, v in pretrained_dict.items() if np.shape(model_dict[k]) == np.shape(v)}
-            model_dict.update(pretrained_dict)
-            net.load_state_dict(model_dict)
-            print('Finished!')
         if Cuda:
             # net = torch.nn.DataParallel(net)
             # cudnn.benchmark = True
