@@ -1,8 +1,8 @@
 dataset_cfg = dict(
     dataset_name='ROD2021',
-    base_root="E:\RADAR\mnt\disk1\CRUW\ROD2021",
-    data_root="E:\RADAR\mnt\disk1\CRUW\ROD2021\sequences",
-    anno_root=r"E:\RADAR\mnt\disk1\CRUW\ROD2021\annotations",
+    base_root="/media/myssd/Datasets/RADAR/RADAR/mnt/disk1/CRUW/ROD2021",
+    data_root="/media/myssd/Datasets/RADAR/RADAR/mnt/disk1/CRUW/ROD2021/sequences",
+    anno_root=r"/media/myssd/Datasets/RADAR/RADAR/mnt/disk1/CRUW/ROD2021/annotations",
     anno_ext='.txt',
     train=dict(
         subdir='train',
@@ -58,7 +58,7 @@ confmap_cfg = dict(
 
 train_cfg = dict(
     n_epoch=60,
-    batch_size=2,
+    batch_size=4,
     lr=0.0001,
     lr_step=5,
     win_size=16,
