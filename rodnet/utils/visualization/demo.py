@@ -21,20 +21,30 @@ def visualize_train_img_old(fig_name, input_radar, output_confmap, confmap_gt):
     plt.close(fig)
 
 
-def visualize_train_img(fig_name, img_path, input_radar, output_confmap, confmap_gt):
+def visualize_train_img(fig_name, img_path, input_radar, output_confmap, confmap_gt, model_cfg):
     fig = plt.figure(figsize=(8, 8))
     img_data = mpimg.imread(img_path)
 
-    fig.add_subplot(2, 2, 1)
+    fig.add_subplot(2, 2, 1) #相机图
     plt.imshow(img_data.astype(np.uint8))
 
-    fig.add_subplot(2, 2, 2)
-    plt.imshow(input_radar, origin='lower', aspect='auto')
+    fig.add_subplot(2, 2, 2)#雷达图
+    input_radar2 = np.zeros((128, 128), dtype=np.float32)
+    for i in range(0, 128):
+        for j in range(0, 128):
+            input_radar2[i][j] = input_radar[i][j]
+    plt.imshow(input_radar2, origin='lower', aspect='auto')
+
+    # fig.add_subplot(2, 3, 5)
+    # output_confmap2 = np.transpose(output_confmap2, (1, 2, 0))
+    # output_confmap2[output_confmap2 < model_cfg['segment_thres']] = 0
+    # plt.imshow(output_confmap2, vmin=0, vmax=1, origin='lower', aspect='auto')
 
     fig.add_subplot(2, 2, 3)
     output_confmap = np.transpose(output_confmap, (1, 2, 0))
-    output_confmap[output_confmap < 0] = 0
+    output_confmap[output_confmap < model_cfg['segment_thres']] = 0
     plt.imshow(output_confmap, vmin=0, vmax=1, origin='lower', aspect='auto')
+
 
     fig.add_subplot(2, 2, 4)
     confmap_gt = np.transpose(confmap_gt, (1, 2, 0))
