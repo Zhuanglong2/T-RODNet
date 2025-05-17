@@ -108,8 +108,8 @@ def accumulate(evalImgs, n_frame, olsThrs, recThrs, dataset,class_id, log=True):
 
         tps = np.array(dtm, dtype=bool)
         fps = np.logical_not(dtm)
-        tp_sum = np.cumsum(tps, axis=1).astype(dtype=np.float)
-        fp_sum = np.cumsum(fps, axis=1).astype(dtype=np.float)
+        tp_sum = np.cumsum(tps, axis=1).astype(dtype=float)
+        fp_sum = np.cumsum(fps, axis=1).astype(dtype=float)
 
         for t, (tp, fp) in enumerate(zip(tp_sum, fp_sum)):
             tp = np.array(tp)
@@ -175,8 +175,8 @@ def accumulate(evalImgs, n_frame, olsThrs, recThrs, dataset,class_id, log=True):
 
             tps = np.array(dtm, dtype=bool)
             fps = np.logical_not(dtm)
-            tp_sum = np.cumsum(tps, axis=1).astype(dtype=np.float)
-            fp_sum = np.cumsum(fps, axis=1).astype(dtype=np.float)
+            tp_sum = np.cumsum(tps, axis=1).astype(dtype=float)
+            fp_sum = np.cumsum(fps, axis=1).astype(dtype=float)
 
             for t, (tp, fp) in enumerate(zip(tp_sum, fp_sum)):
                 tp = np.array(tp)
