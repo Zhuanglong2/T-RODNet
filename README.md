@@ -140,7 +140,8 @@ python tools/train.py
 ```
 
 ## Test models
-**Note:** 1. Please 'mkdir evaluate/sub';   2.Please change the 'out_path' in (test.py).
+**Note:** 1. Please 'mkdir evaluate/sub'.
+2.Please change the 'out_path' in (test.py).
 ```commandline
 python tools/test.py
 ```
