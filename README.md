@@ -136,18 +136,13 @@ python tools/prepare_dataset/prepare_data.py \
 ## Train models
 
 ```commandline
-python tools/train.py --config configs/<CONFIG_FILE> \
-        --data_dir data/<DATA_FOLDER_NAME> \
-        --log_dir checkpoints/
+python tools/train.py
 ```
 
-## Inference
+## Test models
 **Note:** Please change the 'out_path' in (test.py).  
 ```commandline
-python tools/test.py --config configs/<CONFIG_FILE> \
-        --data_dir data/<DATA_FOLDER_NAME> \
-        --checkpoint <CHECKPOINT_PATH> \
-        --res_dir results/
+python tools/test.py
 ```
 
 ## Evaluate models  
