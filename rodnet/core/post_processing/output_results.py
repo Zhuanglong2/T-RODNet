@@ -25,8 +25,8 @@ def write_dets_results_single_frame(res, data_id, save_path, dataset):
             cla_id = int(res[d, 0])
             if cla_id == -1:
                 continue
-            row = res[d, 4]
-            col = res[d, 5]
+            row = res[d, 1]
+            col = res[d, 2]
             conf = res[d, 3]
             # f.write("%d %s %d %d %.4f\n" % (data_id, get_class_name(cla_id, classes), row_id, col_id, conf))
             f.write("%d %.4f %.4f %s %.2f \n" % (data_id, row, col, get_class_name(cla_id, classes), conf))
