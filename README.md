@@ -82,7 +82,7 @@ If you want to install`cruw-devkit` package, please refer to [`cruw-devit`](http
 
 **Note:** Our code have revised the 'cruw' evaluation package. You can use it in (evaluate/ex_evaluate_rod2021.py).    
 
-## Prepare data for RODNet
+## Prepare data for T-RODNet
 
 Download [ROD2021 dataset](https://www.cruwdataset.org/download#h.mxc4upuvacso). 
 Follow [this script](https://github.com/yizhou-wang/RODNet/blob/master/tools/prepare_dataset/reorganize_rod2021.sh) to reorganize files as below.  
