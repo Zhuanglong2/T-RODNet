@@ -2,9 +2,9 @@ from cruw import CRUW
 from cruw.eval import evaluate_rod2021
 
 
-data_root = r"E:\RADAR\mnt\disk1\CRUW\ROD2021"
-submit_dir = r"E:\PycharmProjects\T-RODNet-main\evaluate\sub"
-truth_dir = r"E:\PycharmProjects\T-RODNet-main\evaluate\gt"
+data_root = r"/media/myssd/Datasets/RADAR/RADAR/mnt/disk1/CRUW/ROD2021"
+submit_dir = r"/home/long/PycharmProjects/T-RODNet-main/evaluate/sub"
+truth_dir = r"/home/long/PycharmProjects/T-RODNet-main/evaluate/gt"
 
 if __name__ == '__main__':
 
