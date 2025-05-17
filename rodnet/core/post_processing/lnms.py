@@ -22,11 +22,11 @@ def lnms(obj_dicts_in_class, dataset, config_dict):
             break
         p_star = dts[0]
         detect_mat[cur_det_id, 0] = p_star['class_id']
-        detect_mat[cur_det_id, 1] = p_star['range_id']
-        detect_mat[cur_det_id, 2] = p_star['angle_id']
+        detect_mat[cur_det_id, 1] = p_star['range']
+        detect_mat[cur_det_id, 2] = p_star['angle']
         detect_mat[cur_det_id, 3] = p_star['score']
-        detect_mat[cur_det_id, 4] = p_star['range']
-        detect_mat[cur_det_id, 5] = p_star['angle']
+        detect_mat[cur_det_id, 4] = p_star['range_id']
+        detect_mat[cur_det_id, 5] = p_star['angle_id']
         cur_det_id += 1
         del dts[0]
         for pid, pi in enumerate(dts):
