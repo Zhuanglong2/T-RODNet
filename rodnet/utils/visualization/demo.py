@@ -82,18 +82,16 @@ def visualize_test_img(fig_name, img_path, input_radar, confmap_pred, confmap_gt
         cla_id = int(res_final[d, 0])
         if cla_id == -1:
             continue
-        row_id = res_final[d, 1]
-        col_id = res_final[d, 2]
+        row_id = res_final[d, 4]
+        col_id = res_final[d, 5]
         conf = res_final[d, 3]
-        conf = 1.0 if conf > 1 else conf
+
         cla_str = get_class_name(cla_id, classes)
-        if sybl:
-            text = symbols[cla_str]
-            plt.text(col_id, row_id + 3, text, fontproperties=fp, color='white', size=20, ha="center")
-        else:
-            plt.scatter(col_id, row_id, s=10, c='white')
-            text = cla_str + '\n%.2f' % conf
-            plt.text(col_id + 5, row_id, text, color='white', fontsize=10)
+        
+        plt.scatter(col_id, row_id, s=10, c='white')
+        text = cla_str + '\n%.2f' % conf
+        plt.text(col_id + 5, row_id, text, color='white', fontsize=10)
+        
     plt.axis('off')
     plt.title("RODNet Detection")
 
