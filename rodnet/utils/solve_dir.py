@@ -14,7 +14,7 @@ def create_random_model_name(name, checkpoint_path=None):
     if checkpoint_path is None:
         model_name = name + '-rand-' + time.strftime("%Y%m%d-%H%M%S")
     else:
-        folder_name = checkpoint_path.split('\\')[-2]
+        folder_name = checkpoint_path.split('/')[-2]
         if folder_name.startswith(name):
             model_name = folder_name
         else:
